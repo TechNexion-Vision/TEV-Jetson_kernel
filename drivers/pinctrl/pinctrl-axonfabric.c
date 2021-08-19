@@ -21,6 +21,7 @@
 #include <linux/mfd/axonfabric-core.h>
 #include <linux/mfd/axonfabric.h>
 #include <linux/pinctrl/axonfabric-pins.h>
+#include <linux/pinctrl/axonfabric-nxbox-pins.h>
 
 #include "pinctrl-utils.h"
 
@@ -59,18 +60,33 @@ enum axonf_pinmux_option {
 	AXONF_PINMUX_GPIO = 4,
 };
 
+#define AXONF_NXBOX_FUNCTION_GROUP(fname, mux)			\
+	{						\
+		.name = #fname,				\
+		.groups = axonf_nxbox_gpio_groups,			\
+		.ngroups = ARRAY_SIZE(axonf_nxbox_gpio_groups),	\
+		.mux_option = AXONF_PINMUX_##mux,	\
+	}
+
+static const struct axonf_pin_function axonf_nxbox_pin_function[] = {
+	AXONF_NXBOX_FUNCTION_GROUP(passthru_out,  PASSTHRU_OUTPUT),
+	AXONF_NXBOX_FUNCTION_GROUP(passthru_in,  PASSTHRU_INPUT),
+	AXONF_NXBOX_FUNCTION_GROUP(alt0_out, ALT0_OUTPUT),
+	AXONF_NXBOX_FUNCTION_GROUP(alt1_out, ALT1_OUTPUT),
+	AXONF_NXBOX_FUNCTION_GROUP(gpio, GPIO),
+};
 
 #define AXONF_FUNCTION_GROUP(fname, mux)			\
 	{						\
 		.name = #fname,				\
-		.groups = gpio_groups,			\
-		.ngroups = ARRAY_SIZE(gpio_groups),	\
+		.groups = axonf_gpio_groups,			\
+		.ngroups = ARRAY_SIZE(axonf_gpio_groups),	\
 		.mux_option = AXONF_PINMUX_##mux,	\
 	}
 
 static const struct axonf_pin_function axonf_pin_function[] = {
-	AXONF_FUNCTION_GROUP(passthru_out, PASSTHRU_OUTPUT),
-	AXONF_FUNCTION_GROUP(passthru_in, PASSTHRU_INPUT),
+	AXONF_FUNCTION_GROUP(passthru_out,  PASSTHRU_OUTPUT),
+	AXONF_FUNCTION_GROUP(passthru_in,  PASSTHRU_INPUT),
 	AXONF_FUNCTION_GROUP(alt0_out, ALT0_OUTPUT),
 	AXONF_FUNCTION_GROUP(alt1_out, ALT1_OUTPUT),
 	AXONF_FUNCTION_GROUP(gpio, GPIO),
@@ -303,17 +319,39 @@ static int axonfabric_pinctrl_probe(struct platform_device *pdev)
 	axonfabric_pinctrl->axonf_chip = dev_get_drvdata(pdev->dev.parent);
 	platform_set_drvdata(pdev, axonfabric_pinctrl);
 
-	axonfabric_pinctrl->pins = axonf_pins_desc;
-	axonfabric_pinctrl->num_pins = ARRAY_SIZE(axonf_pins_desc);
-	axonfabric_pinctrl->functions = axonf_pin_function;
-	axonfabric_pinctrl->num_functions = ARRAY_SIZE(axonf_pin_function);
-	axonfabric_pinctrl->pin_groups = axonf_pingroups;
-	axonfabric_pinctrl->num_pin_groups = ARRAY_SIZE(axonf_pingroups);
+	/*
+	  TODO: Check to see if we are working with NXBOX or AXON and
+	  set up pinctrl driver with the definitions in axonfabric-pins or
+	  axonfabric-nxbox-pins
+	*/
+
+	if(AXONF_SOC_TYPE(axonfabric_pinctrl->axonf_chip->cfgdata) == AXONF_NXBOX ) {
+		dev_info(&pdev->dev, "Type is NXBOX\n");
+
+		axonfabric_pinctrl->pins = axonf_nxbox_pins_desc;
+		axonfabric_pinctrl->num_pins = ARRAY_SIZE(axonf_nxbox_pins_desc);
+		axonfabric_pinctrl->pin_groups = axonf_nxbox_pingroups;
+		axonfabric_pinctrl->num_pin_groups = ARRAY_SIZE(axonf_nxbox_pingroups);
+		axonfabric_pinctrl->functions = axonf_nxbox_pin_function;
+		axonfabric_pinctrl->num_functions = ARRAY_SIZE(axonf_nxbox_pin_function);
+	}
+	else {
+		dev_info(&pdev->dev, "Type is AXON\n");
+
+		axonfabric_pinctrl->pins = axonf_pins_desc;
+		axonfabric_pinctrl->num_pins = ARRAY_SIZE(axonf_pins_desc);
+		axonfabric_pinctrl->pin_groups = axonf_pingroups;
+		axonfabric_pinctrl->num_pin_groups = ARRAY_SIZE(axonf_pingroups);
+		axonfabric_pinctrl->functions = axonf_pin_function;
+		axonfabric_pinctrl->num_functions = ARRAY_SIZE(axonf_pin_function);
+	}
+
 	axonf_pinctrl_desc.name = dev_name(&pdev->dev);
-	axonf_pinctrl_desc.pins = axonf_pins_desc;
-	axonf_pinctrl_desc.npins = ARRAY_SIZE(axonf_pins_desc);
+	axonf_pinctrl_desc.pins = axonfabric_pinctrl->pins;
+	axonf_pinctrl_desc.npins = axonfabric_pinctrl->num_pins;
 	axonfabric_pinctrl->pctl = devm_pinctrl_register(&pdev->dev, &axonf_pinctrl_desc,
 					     axonfabric_pinctrl);
+
 	if (IS_ERR(axonfabric_pinctrl->pctl)) {
 		dev_err(&pdev->dev, "Couldn't register pinctrl driver\n");
 		return PTR_ERR(axonfabric_pinctrl->pctl);
