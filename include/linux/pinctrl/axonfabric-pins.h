@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 TechNexion Ltd.
+ *  Copyright (C) 2021 TechNexion Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,15 +18,7 @@
 
 
 #include <linux/pinctrl/pinctrl.h>
-
-
-#define AXONF_PIN_DESC(name) PINCTRL_PIN(AXONF_PIN_ ## name, #name)
-
-struct axonf_pingroup {
-	const char *name;
-	const unsigned pins[1];
-	unsigned npins;
-};
+#include <linux/pinctrl/pinctrl-axonfabric.h>
 
 #define AXONF_PIN_F_GPIO_X1_P66 	0
 #define AXONF_PIN_F_GPIO_X1_P68 	1
@@ -231,7 +223,7 @@ static const struct pinctrl_pin_desc axonf_pins_desc[] = {
 
 /* GPIO groups */
 
-static const char * const gpio_groups[] = {
+static const char * const axonf_gpio_groups[] = {
 	"F_GPIO_X1_P66",
 	"F_GPIO_X1_P68",
 	"F_GPIO_X1_P70",
@@ -333,9 +325,6 @@ static const char * const gpio_groups[] = {
 
 
 /* Pin groups */
-
-#define AXONF_PINGROUP(pg_name, pin_id) {.name = #pg_name,	.pins = {AXONF_PIN_##pin_id}, .npins = 1,}
-
 static const struct axonf_pingroup axonf_pingroups[] = {
 	AXONF_PINGROUP(F_GPIO_X1_P66, F_GPIO_X1_P66),
 	AXONF_PINGROUP(F_GPIO_X1_P68, F_GPIO_X1_P68),
