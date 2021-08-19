@@ -374,6 +374,13 @@ static int axonfabric_gpio_probe(struct platform_device *pdev)
 
 	memcpy(&axonfabric_gpio->gpio_chip, &template_chip, sizeof(axonfabric_gpio->gpio_chip));
 
+	/*
+	   Check for to see if we are working with an NXBOX vs AXON and
+	   set &axonfabric_gpio->gpio_chip.ngpio accordingly.
+	*/
+	if(AXONF_SOC_TYPE(axonfabric_gpio->axonf_chip->cfgdata) == AXONF_NXBOX )
+		axonfabric_gpio->gpio_chip.ngpio = AXONF_NXBOX_NGPIOS;
+
 	axonfabric_gpio->gpio_chip.parent = &pdev->dev;
 
 #ifdef CONFIG_OF_GPIO

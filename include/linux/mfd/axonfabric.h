@@ -58,7 +58,15 @@
 #define AXONF_NGPIOS					104
 #define AXONF_NBANKS					13
 
-#define MAX_BANK 		13
+/*
+  NXBOX Definitions
+  The NXBOX has more GPIO and more banks than the original AXON products, so
+  we need to define a different number here.
+*/
+#define AXONF_NXBOX_NGPIOS					112
+#define AXONF_NXBOX_NBANKS					14
+
+#define MAX_BANK 		14  /* Most be equal to the max number of banks supported */
 #define BANK_SZ 		8
 
 /*
@@ -76,9 +84,10 @@
 #define AXONF_INT						0x00100
 #define AXONF_IMX6						0x01000
 #define AXONF_IMX8MM					0x02000
+#define AXONF_NXBOX						0x03000
 
-#define AXONF_CHIP_TYPE(x)	((x) & AXONF_TYPE_MASK)
-#define AXONF_SOC_TYPE(x)	((x) & AXONF_SOC_MASK)
+#define AXONF_CHIP_TYPE(x)	(((x) << 12) & AXONF_TYPE_MASK)
+#define AXONF_SOC_TYPE(x)	(((x) << 12) & AXONF_SOC_MASK)
 
 #define EMIT_DEBUG_INFO 0  // Set to 1 to turn on helpful debug messages
 #define AXONF_DBG_INFO(dev, fmt, ...) \

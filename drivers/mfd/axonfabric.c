@@ -62,7 +62,9 @@ static const struct mfd_cell axonfabric_cells[] = {
 const u8 axonf_magic[] = "AXON\0";
 
 /*
- * Bank Masks: Tell driver which I/O blocks can be used as GPIO
+ * Bank Masks: Tell driver which I/O blocks can be used as GPIO.
+ * Note that this is not ideal. The FPGA should store this information
+ * in a register within the iobank.
  */
 const u8 axonf_imx6_bank_mask[] = {
 	0xFF, 0xFF, 0x7F, 0xFF, 0xFF, 0xFF, 0x1F, 0xFC,
@@ -72,6 +74,11 @@ const u8 axonf_imx6_bank_mask[] = {
 const u8 axonf_imx8mm_bank_mask[] = {
 	0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0x1F, 0xFC,
 	0xFF, 0x7F, 0x1F, 0xFF, 0x7F
+	};
+
+const u8 axonf_nxbox_bank_mask[] = {
+	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+	0x3F, 0x7F, 0xFF, 0xFF, 0xFF, 0x7F
 	};
 
 /*
@@ -772,18 +779,21 @@ static int device_axonf_init(struct axonf_chip *chip, u32 invert)
 
 	memset(chip->allocated, 0, sizeof(chip->allocated));
 
-	/* Assign the bank mask based on the driver data */
-	switch(AXONF_SOC_TYPE(chip->driver_data)) {
+	/* Assign the bank mask based on the config data */
+	switch(AXONF_SOC_TYPE(chip->cfgdata)) {
 		case AXONF_IMX6:
-			memcpy(chip->bank_mask, axonf_imx6_bank_mask, MAX_BANK);
+			memcpy(chip->bank_mask, axonf_imx6_bank_mask, sizeof(axonf_imx6_bank_mask));
 			break;
 		case AXONF_IMX8MM:
-			memcpy(chip->bank_mask, axonf_imx8mm_bank_mask, MAX_BANK);
+			memcpy(chip->bank_mask, axonf_imx8mm_bank_mask, sizeof(axonf_imx8mm_bank_mask));
+			break;
+		case AXONF_NXBOX:
+			memcpy(chip->bank_mask, axonf_nxbox_bank_mask, sizeof(axonf_nxbox_bank_mask));
 			break;
 		default:
 			dev_err(&chip->client->dev,
-					"Cannot set bank mask. Unknown SOC type. %08lX\n",
-					chip->driver_data);
+					"Cannot set bank mask. Unknown SOC type. %02X\n",
+					chip->cfgdata);
 			break;
 	}
 
@@ -1009,6 +1019,7 @@ static const struct i2c_device_id axonf_id[] = {
 	{ "axon-imx8mm-f01", AXONF_NGPIOS | AXONF_IMX8MM | AXONF_FLVL_1, },
 	{ "axon-imx6-f03",   AXONF_NGPIOS | AXONF_IMX6   | AXONF_FLVL_3 | AXONF_INT, },
 	{ "axon-imx8mm-f03", AXONF_NGPIOS | AXONF_IMX8MM | AXONF_FLVL_3 | AXONF_INT, },
+	{ "axon-nxbox", AXONF_NXBOX_NGPIOS | AXONF_NXBOX | AXONF_FLVL_3 | AXONF_INT, },
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, axonf_id);
@@ -1018,6 +1029,7 @@ static const struct of_device_id axonf_dt_ids[] = {
 	{ .compatible = "technexion,axon-imx8mm-f01", .data = (void*)(AXONF_NGPIOS | AXONF_IMX8MM | AXONF_FLVL_1), },
 	{ .compatible = "technexion,axon-imx6-f03",   .data = (void*)(AXONF_NGPIOS | AXONF_IMX6   | AXONF_INT | AXONF_FLVL_3), },
 	{ .compatible = "technexion,axon-imx8mm-f03", .data = (void*)(AXONF_NGPIOS | AXONF_IMX8MM | AXONF_INT | AXONF_FLVL_3), },
+	{ .compatible = "technexion,axon-nxbox", .data = (void*)(AXONF_NXBOX_NGPIOS | AXONF_NXBOX | AXONF_INT | AXONF_FLVL_3), },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, axonf_dt_ids);
