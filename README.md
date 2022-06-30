@@ -30,6 +30,7 @@ to device here
 ```
 /boot/
 ```
+<br />
  
 * Kernel Modules:
 
@@ -41,6 +42,8 @@ to device here
 ```
 /
 ```
+
+<br />
 
 * device-tree:
 
