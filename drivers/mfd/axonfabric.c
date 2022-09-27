@@ -918,7 +918,7 @@ static int axonf_init_debugfs(struct axonf_chip *chip) {
 					chip->debugfs_top_dir, (void*) chip,
 					&axonf_iobregs_debug_fops);
 
-	ret = debugfs_create_x16("a", S_IRUGO | S_IWUGO,
+	debugfs_create_x16("a", S_IRUGO | S_IWUGO,
 					chip->debugfs_top_dir, &(chip->a));
 
 	ret = debugfs_create_file("d", S_IRUGO | S_IWUGO,
