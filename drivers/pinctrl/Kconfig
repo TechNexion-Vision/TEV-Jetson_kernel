@@ -139,6 +139,12 @@ config PINCTRL_DA9062
 
 	  Say yes to enable pinctrl and GPIO support for the DA9062 PMIC.
 
+config PINCTRL_AXONFABRIC
+	bool "Pinctrl and GPIO driver for TechNexion Axon Fabric FPGA"
+	depends on MFD_AXONFABRIC
+	help
+	  Say yes to enable pinctrl and GPIO support for the Axon Fabric
+
 config PINCTRL_DIGICOLOR
 	bool
 	depends on OF && (ARCH_DIGICOLOR || COMPILE_TEST)
