@@ -1834,7 +1834,7 @@ static const struct i2c_algorithm tegra_i2c_algo = {
 static const struct i2c_adapter_quirks tegra_i2c_quirks = {
 	.flags = I2C_AQ_NO_ZERO_LEN,
 	.max_read_len = SZ_4K,
-	.max_write_len = SZ_4K - I2C_PACKET_HEADER_SIZE,
+	.max_write_len = SZ_4K,
 };
 
 static const struct i2c_adapter_quirks tegra194_i2c_quirks = {
