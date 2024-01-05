@@ -45,6 +45,7 @@
 #define TEGRA_UART_IER_EORD			0x20
 #define TEGRA_UART_MCR_RTS_EN			0x40
 #define TEGRA_UART_MCR_CTS_EN			0x20
+#define TEGRA_UART_MCR_FORCE_RTS_LOW		0x02
 #define TEGRA_UART_LSR_ANY			(UART_LSR_OE | UART_LSR_BI | \
 						UART_LSR_PE | UART_LSR_FE)
 #define TEGRA_UART_IRDA_CSR			0x08
@@ -1550,6 +1551,7 @@ static void tegra_uart_set_termios(struct uart_port *u,
 	if (tty_termios_baud_rate(termios))
 		tty_termios_encode_baud_rate(termios, baud, baud);
 	spin_lock_irqsave(&u->lock, flags);
+	tup->mcr_shadow &= ~TEGRA_UART_MCR_FORCE_RTS_LOW;
 
 	/* Flow control */
 	if (termios->c_cflag & CRTSCTS)	{
@@ -1911,6 +1913,11 @@ static int tegra_uart_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Failed to add uart port, err %d\n", ret);
 		return ret;
 	}
+
+	clk_prepare_enable(tup->uart_clk);
+	tup->mcr_shadow = TEGRA_UART_MCR_FORCE_RTS_LOW;
+	tegra_uart_write(tup, tup->mcr_shadow, UART_MCR);
+	clk_disable_unprepare(tup->uart_clk);
 
 	if (tup->enable_rx_buffer_throttle) {
 		timer_setup(&tup->timer, tegra_uart_rx_buffer_throttle_timer, 0);
